@@ -1,4 +1,4 @@
-package types
+package sdebug
 
 import (
 	"encoding/json"
@@ -6,13 +6,13 @@ import (
 	"sync/atomic"
 )
 
-// SDebugInfo 调试信息收集器, 提供一个并发安全、只写不读的调试信息收集器.
+// SDebugStorage 调试信息存储器, 提供一个并发安全、只写不读的调试信息收集器.
 // - 支持 一级key\两级key 写入，一级key写入Map自动转成二级key
 // - 支持 原子计数器、任意值类型(any/[]any/map)
 // - 支持 一次性导出 Map 或 Json字节切片
 // - 支持 动态开启/关闭调试 模式, 关闭时不写入任何值
 // - ToMap / ToJSON 只执行一次，后续调用直接返回缓存值
-type SDebugInfo struct {
+type SDebugStorage struct {
 	enabled   atomic.Bool  // 调试开关
 	top       sync.Map     // 一级 key -> 值(map[string]any | *sync.RWMutex)
 	mu        sync.RWMutex // 保护 ToMap / ToJSON
@@ -20,9 +20,9 @@ type SDebugInfo struct {
 	cacheJSON atomic.Value // *[]byte
 }
 
-// NewDebugInfo 返回一个新的 SDebugInfo 实例
-func NewDebugInfo(enabled bool) *SDebugInfo {
-	d := &SDebugInfo{}
+// NewDebugInfo 返回一个新的 SDebugStorage 实例
+func NewDebugInfo(enabled bool) *SDebugStorage {
+	d := &SDebugStorage{}
 	d.enabled.Store(enabled)
 	d.cacheMap.Store(&map[string]any{"debug": enabled})
 	d.cacheJSON.Store(&[]byte{})
@@ -31,7 +31,7 @@ func NewDebugInfo(enabled bool) *SDebugInfo {
 
 // Set 写入任意值 val
 // 若 val 是 map[string]any 且 subKey == ""，则把 val 的 key 作为二级 key
-func (d *SDebugInfo) Set(topKey, subKey string, val any) {
+func (d *SDebugStorage) Set(topKey, subKey string, val any) {
 	if d.disabled() {
 		return
 	}
@@ -52,7 +52,7 @@ func (d *SDebugInfo) Set(topKey, subKey string, val any) {
 }
 
 // Incr 原子累加 delta
-func (d *SDebugInfo) Incr(topKey, subKey string, delta int64) {
+func (d *SDebugStorage) Incr(topKey, subKey string, delta int64) {
 	if d.disabled() {
 		return
 	}
@@ -62,7 +62,7 @@ func (d *SDebugInfo) Incr(topKey, subKey string, delta int64) {
 }
 
 // Store 原子设置计数器
-func (d *SDebugInfo) Store(topKey, subKey string, val int64) {
+func (d *SDebugStorage) Store(topKey, subKey string, val int64) {
 	if d.disabled() {
 		return
 	}
@@ -75,7 +75,7 @@ func (d *SDebugInfo) Store(topKey, subKey string, val int64) {
 // 1. 清空所有键值
 // 2. 禁用调试模式
 // 3. 后续调用直接返回这次缓存值
-func (d *SDebugInfo) ToMap() map[string]any {
+func (d *SDebugStorage) ToMap() map[string]any {
 	// 获取锁
 	d.mu.Lock()
 	defer d.mu.Unlock()
@@ -123,7 +123,7 @@ func (d *SDebugInfo) ToMap() map[string]any {
 // ToJSON 返回 JSON字节切片
 // 1. 调用 ToMap 获取键值 并 序列化
 // 2. 后续调用直接返回这次缓存值
-func (d *SDebugInfo) ToJSON() ([]byte, error) {
+func (d *SDebugStorage) ToJSON() ([]byte, error) {
 	// 判断Json缓存是否为空
 	if p := d.cacheJSON.Load(); p != nil {
 		if b := *p.(*[]byte); len(b) > 0 {
@@ -155,7 +155,7 @@ func (d *SDebugInfo) ToJSON() ([]byte, error) {
 // Peek 返回当前调试信息的深拷贝快照（不关闭调试、不缓存、不清空）
 // 1. 非flush模式的 ToMap接口
 // 2. deepCopyMap可能在大数据量时造成内存压力，慎用！！！
-func (d *SDebugInfo) Peek() map[string]any {
+func (d *SDebugStorage) Peek() map[string]any {
 	if d.disabled() {
 		// 调试已关闭，直接返回缓存值（如果有）
 		if p := d.cacheMap.Load(); p != nil {
@@ -189,9 +189,9 @@ func (d *SDebugInfo) Peek() map[string]any {
 	return out
 }
 
-// Clone 返回当前 SDebugInfo 的深拷贝副本，原对象状态（开启/关闭、缓存、数据）全部保持不变
-func (d *SDebugInfo) Clone() *SDebugInfo {
-	newD := &SDebugInfo{}
+// Clone 返回当前 SDebugStorage 的深拷贝副本，原对象状态（开启/关闭、缓存、数据）全部保持不变
+func (d *SDebugStorage) Clone() *SDebugStorage {
+	newD := &SDebugStorage{}
 	newD.enabled.Store(d.enabled.Load())   // 继承原状态
 	newD.cacheMap.Store(&map[string]any{}) // 清空缓存
 	newD.cacheJSON.Store(&[]byte{})
@@ -214,16 +214,24 @@ func (d *SDebugInfo) Clone() *SDebugInfo {
 }
 
 // MarshalJSON 针对encoding/json的自动序列化
-func (d *SDebugInfo) MarshalJSON() ([]byte, error) {
+func (d *SDebugStorage) MarshalJSON() ([]byte, error) {
 	return d.ToJSON()
 }
 
 // UnmarshalJSON 针对encoding/json的反自动序列化
-func (d *SDebugInfo) UnmarshalJSON(data []byte) error {
+func (d *SDebugStorage) UnmarshalJSON(data []byte) error {
 	m := map[string]any{}
 	if err := json.Unmarshal(data, &m); err != nil {
 		return err
 	}
+	d.mu.Lock()
+	defer d.mu.Unlock()
+	// 重置 enabled, 强制为 true
+	d.enabled.Store(true)
+	// 重置 内容 和 缓存
+	d.top.Clear()
+	d.cacheMap.Store(&map[string]any{"debug": true})
+	d.cacheJSON.Store(&[]byte{})
 	for k, v := range m {
 		d.Set(k, "", v)
 	}
@@ -231,18 +239,18 @@ func (d *SDebugInfo) UnmarshalJSON(data []byte) error {
 }
 
 // disabled 返回当前DebugInfo是否被禁用
-func (d *SDebugInfo) disabled() bool {
+func (d *SDebugStorage) disabled() bool {
 	return !d.enabled.Load()
 }
 
 // clearAndDisable 一次性清空所有数据并禁用调试模式
-func (d *SDebugInfo) clearAndDisable() {
+func (d *SDebugStorage) clearAndDisable() {
 	d.enabled.Store(false)
 	d.top = sync.Map{}
 }
 
 // atomicCounterOp 原子计数公共实现
-func (d *SDebugInfo) atomicCounterOp(topKey, subKey string, fn func(*int64)) {
+func (d *SDebugStorage) atomicCounterOp(topKey, subKey string, fn func(*int64)) {
 	actual, _ := d.top.LoadOrStore(topKey, make(map[string]any))
 	sub := actual.(map[string]any)
 	// 获取锁
@@ -268,7 +276,7 @@ func (d *SDebugInfo) atomicCounterOp(topKey, subKey string, fn func(*int64)) {
 // lockKey 二级map的锁
 type lockKey struct{ topKey string }
 
-func (d *SDebugInfo) lockOf(topKey string) *sync.RWMutex {
+func (d *SDebugStorage) lockOf(topKey string) *sync.RWMutex {
 	lk, _ := d.top.LoadOrStore(lockKey{topKey}, new(sync.RWMutex))
 	return lk.(*sync.RWMutex)
 }

@@ -1,6 +1,6 @@
-// Package log provides field-level JSON logging, outputting only fields with the 'log' tag.
+// Package slog provides field-level JSON logging, outputting only fields with the 'slog' tag.
 // Priority: Struct Logger → Field Logger → ser=xxx → Basic Type → Mask
-package log
+package slog
 
 import (
 	"reflect"
@@ -64,8 +64,8 @@ func (e *encoder) getStructInfo(rt reflect.Type) *structInfo {
 	for i := 0; i < rt.NumField(); i++ {
 		sf := rt.Field(i)
 
-		// Parse log tag
-		if tagStr, ok := sf.Tag.Lookup("log"); ok {
+		// Parse slog tag
+		if tagStr, ok := sf.Tag.Lookup("slog"); ok {
 			info.hasLogTag = true
 			opts := e.parseFieldOptions(tagStr, sf)
 			info.fields = append(info.fields, fieldInfo{

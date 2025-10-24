@@ -30,7 +30,7 @@
 
 ```bash
 go mod init your-project-name
-go get github.com/your-username/your-repo-name/log # 替换为你的仓库地址
+go get github.com/your-username/your-repo-name/slog # 替换为你的仓库地址
 ```
 
 或者，如果你将代码放在本地 `log` 目录下，无需 `go get`。
@@ -48,13 +48,13 @@ import (
 )
 
 type User struct {
-	ID       int       `log:"id"`
-	Name     string    `log:"name"`
-	Email    string    `log:"email,mask=email"`        // 使用内置邮箱脱敏
-	Phone    string    `log:"phone,mask=phone"`        // 使用内置手机号脱敏
-	Created  time.Time `log:"created_at,ser=time_log"` // 使用自定义时间序列化器
-	Active   bool      `log:"is_active"`
-	Password string    `log:"-"` // 忽略此字段
+	ID       int       `slog:"id"`
+	Name     string    `slog:"name"`
+	Email    string    `slog:"email,mask=email"`        // 使用内置邮箱脱敏
+	Phone    string    `slog:"phone,mask=phone"`        // 使用内置手机号脱敏
+	Created  time.Time `slog:"created_at,ser=time_log"` // 使用自定义时间序列化器
+	Active   bool      `slog:"is_active"`
+	Password string    `slog:"-"` // 忽略此字段
 }
 
 func main() {
@@ -85,9 +85,9 @@ func main() {
 
 ```go
 type MyStruct struct {
-	FieldA string `log:"field_a"`           // 序列化为 "field_a"
-	FieldB string `log:"-"`                 // 忽略此字段
-	FieldC string `log:"field_c,omitempty"` // 如果值为空，则忽略此字段
+	FieldA string `slog:"field_a"`           // 序列化为 "field_a"
+	FieldB string `slog:"-"`                 // 忽略此字段
+	FieldC string `slog:"field_c,omitempty"` // 如果值为空，则忽略此字段
 }
 ```
 
@@ -97,8 +97,8 @@ type MyStruct struct {
 
 ```go
 type MyEvent struct {
-	Timestamp time.Time `log:"ts,ser=time_unix_ms"`     // Unix 毫秒时间戳
-	Amount    float64   `log:"amount,ser=currency_cny"` // 人民币格式
+	Timestamp time.Time `slog:"ts,ser=time_unix_ms"`     // Unix 毫秒时间戳
+	Amount    float64   `slog:"amount,ser=currency_cny"` // 人民币格式
 }
 
 event := MyEvent{
@@ -117,8 +117,8 @@ fmt.Println(string(data))
 
 ```go
 type User struct {
-	Phone string `log:"phone,mask=phone"`
-	Email string `log:"email,mask=email"`
+	Phone string `slog:"phone,mask=phone"`
+	Email string `slog:"email,mask=email"`
 }
 
 user := User{
@@ -137,13 +137,13 @@ fmt.Println(string(data))
 
 ```go
 type Address struct {
-	City string `log:"city"`
-	Zip  string `log:"zip"`
+	City string `slog:"city"`
+	Zip  string `slog:"zip"`
 }
 
 type Person struct {
-	Name    string  `log:"name"`
-	Address Address `log:",inline"`
+	Name    string  `slog:"name"`
+	Address Address `slog:",inline"`
 }
 
 person := Person{
@@ -173,7 +173,7 @@ func (c CustomLog) MarshalLog() ([]byte, error) {
 }
 
 type Container struct {
-	Custom CustomLog `log:"custom"`
+	Custom CustomLog `slog:"custom"`
 }
 
 container := Container{
@@ -200,8 +200,8 @@ func (c ConditionalValue) ShouldLog() bool {
 }
 
 type Data struct {
-	AlwaysPresent string           `log:"always"`
-	Conditional   ConditionalValue `log:"conditional"`
+	AlwaysPresent string           `slog:"always"`
+	Conditional   ConditionalValue `slog:"conditional"`
 }
 
 data := Data{

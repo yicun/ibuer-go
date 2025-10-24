@@ -1,6 +1,6 @@
-// Package log provides field-level JSON logging, outputting only fields with the 'log' tag.
+// Package slog provides field-level JSON logging, outputting only fields with the 'slog' tag.
 // Priority: Struct Logger → Field Logger → ser=xxx → Basic Type → Mask
-package log
+package slog
 
 import (
 	"context"
@@ -13,13 +13,13 @@ import (
 	"time"
 )
 
-// TestStructWithLogTags tests basic field serialization with log tags.
+// TestStructWithLogTags tests basic field serialization with slog tags.
 func TestStructWithLogTags(t *testing.T) {
 	type TestStruct struct {
-		A string `log:"a"`
-		B int    `log:"b"`
-		C string `log:"-"` // Should be ignored
-		D bool   `log:"d"`
+		A string `slog:"a"`
+		B int    `slog:"b"`
+		C string `slog:"-"` // Should be ignored
+		D bool   `slog:"d"`
 	}
 
 	s := TestStruct{
@@ -66,7 +66,7 @@ func TestStructWithoutLogTags(t *testing.T) {
 		t.Fatalf("Encode failed: %v", err)
 	}
 	if enc.out != nil {
-		t.Errorf("Expected nil output when JSON fallback is disabled and no log tags, got %v", enc.out)
+		t.Errorf("Expected nil output when JSON fallback is disabled and no slog tags, got %v", enc.out)
 	}
 
 	// Enable JSON fallback (default), should work
@@ -85,9 +85,9 @@ func TestStructWithoutLogTags(t *testing.T) {
 // TestOmitEmpty tests omitting empty fields.
 func TestOmitEmpty(t *testing.T) {
 	type TestStruct struct {
-		A string `log:"a,omitempty"`
-		B int    `log:"b,omitempty"`
-		C string `log:"c"` // No omitempty
+		A string `slog:"a,omitempty"`
+		B int    `slog:"b,omitempty"`
+		C string `slog:"c"` // No omitempty
 	}
 
 	s := TestStruct{
@@ -109,9 +109,9 @@ func TestOmitEmpty(t *testing.T) {
 
 	// Test with global OmitEmptyByDefault:true
 	s2 := struct {
-		A string `log:"a"`
-		B int    `log:"b"`
-		C string `log:"c"`
+		A string `slog:"a"`
+		B int    `slog:"b"`
+		C string `slog:"c"`
 	}{
 		A: "",
 		B: 0,
@@ -130,9 +130,9 @@ func TestOmitEmpty(t *testing.T) {
 
 	// Test with global OmitEmptyByDefault:false
 	s3 := struct {
-		A string `log:"a"`
-		B int    `log:"b"`
-		C string `log:"c"`
+		A string `slog:"a"`
+		B int    `slog:"b"`
+		C string `slog:"c"`
 	}{
 		A: "",
 		B: 0,
@@ -160,7 +160,7 @@ func TestCustomSerializer(t *testing.T) {
 	})
 
 	type TestStruct struct {
-		Text string `log:"text,ser=test_upper"`
+		Text string `slog:"text,ser=test_upper"`
 	}
 
 	s := TestStruct{Text: "hello"}
@@ -183,7 +183,7 @@ func TestMask(t *testing.T) {
 	})
 
 	type TestStruct struct {
-		SSN string `log:"ssn,mask=test_mask"`
+		SSN string `slog:"ssn,mask=test_mask"`
 	}
 
 	s := TestStruct{SSN: "123456789"}
@@ -204,9 +204,9 @@ func TestTimeSerializer(t *testing.T) {
 	tm := time.Date(2025, 1, 1, 12, 0, 5, 123000000, time.UTC)
 
 	type TestStruct struct {
-		T1 time.Time `log:"t1,ser=time_rfc3339"`
-		T2 time.Time `log:"t2,ser=time_date"`
-		T3 time.Time `log:"t3,ser=time_unix"`
+		T1 time.Time `slog:"t1,ser=time_rfc3339"`
+		T2 time.Time `slog:"t2,ser=time_date"`
+		T3 time.Time `slog:"t3,ser=time_unix"`
 	}
 
 	s := TestStruct{T1: tm, T2: tm, T3: tm}
@@ -235,9 +235,9 @@ func TestDurationSerializer(t *testing.T) {
 	dur := 3*time.Hour + 30*time.Minute + 45*time.Second + 123*time.Millisecond
 
 	type TestStruct struct {
-		D1 time.Duration `log:"d1,ser=duration_ms"`     // Milliseconds
-		D2 time.Duration `log:"d2,ser=duration_sec_2"`  // Seconds, 2 decimals
-		D3 time.Duration `log:"d3,ser=duration_string"` // String format
+		D1 time.Duration `slog:"d1,ser=duration_ms"`     // Milliseconds
+		D2 time.Duration `slog:"d2,ser=duration_sec_2"`  // Seconds, 2 decimals
+		D3 time.Duration `slog:"d3,ser=duration_string"` // String format
 	}
 
 	s := TestStruct{D1: dur, D2: dur, D3: dur}
@@ -266,9 +266,9 @@ func TestDurationSerializerPrecisionType(t *testing.T) {
 	dur := 3*time.Hour + 30*time.Minute + 45*time.Second + 123*time.Millisecond
 
 	type TestStruct struct {
-		D1 time.Duration `log:"d1,ser=duration_sec_2"` // Seconds, 2 decimals
-		D2 time.Duration `log:"d2,ser=duration_sec_3"` // Seconds, 3 decimals
-		D3 time.Duration `log:"d3,ser=duration_ms_1"`  // Milliseconds, 1 decimal
+		D1 time.Duration `slog:"d1,ser=duration_sec_2"` // Seconds, 2 decimals
+		D2 time.Duration `slog:"d2,ser=duration_sec_3"` // Seconds, 3 decimals
+		D3 time.Duration `slog:"d3,ser=duration_ms_1"`  // Milliseconds, 1 decimal
 	}
 
 	s := TestStruct{D1: dur, D2: dur, D3: dur}
@@ -316,9 +316,9 @@ func TestDurationSerializerPrecisionType(t *testing.T) {
 // TestCurrencySerializer tests built-in currency serializers.
 func TestCurrencySerializer(t *testing.T) {
 	type TestStruct struct {
-		Price1 float64 `log:"price1,ser=currency_cny"`
-		Price2 float64 `log:"price2,ser=currency_usd"`
-		Price3 int     `log:"price3,ser=currency_jpy"` // JPY has 0 decimals
+		Price1 float64 `slog:"price1,ser=currency_cny"`
+		Price2 float64 `slog:"price2,ser=currency_usd"`
+		Price3 int     `slog:"price3,ser=currency_jpy"` // JPY has 0 decimals
 	}
 
 	s := TestStruct{Price1: 123.45, Price2: 67.89, Price3: 999}
@@ -352,7 +352,7 @@ func (c CustomLog) MarshalLog() ([]byte, error) {
 
 func TestLoggerInterface(t *testing.T) {
 	type TestStruct struct {
-		Custom CustomLog `log:"custom"`
+		Custom CustomLog `slog:"custom"`
 	}
 
 	s := TestStruct{Custom: CustomLog{Value: "test_value"}}
@@ -379,8 +379,8 @@ func (c ConditionalValue) ShouldLog() bool {
 
 func TestConditionalLogger(t *testing.T) {
 	type TestStruct struct {
-		AlwaysPresent string           `log:"always"`
-		Conditional   ConditionalValue `log:"conditional"`
+		AlwaysPresent string           `slog:"always"`
+		Conditional   ConditionalValue `slog:"conditional"`
 	}
 
 	// Test with ShouldLog returning false
@@ -430,8 +430,8 @@ func TestConditionalLogger(t *testing.T) {
 // TestCircularReference tests circular reference detection.
 func TestCircularReference(t *testing.T) {
 	type Node struct {
-		Value int   `log:"value"`
-		Next  *Node `log:"next"`
+		Value int   `slog:"value"`
+		Next  *Node `slog:"next"`
 	}
 
 	n1 := &Node{Value: 1}
@@ -472,8 +472,8 @@ func TestCircularReference(t *testing.T) {
 // TestSliceAndMap tests serialization of slices and maps.
 func TestSliceAndMap(t *testing.T) {
 	type TestStruct struct {
-		Slice []int             `log:"slice"`
-		Map   map[string]string `log:"map"`
+		Slice []int             `slog:"slice"`
+		Map   map[string]string `slog:"map"`
 	}
 
 	s := TestStruct{
@@ -504,7 +504,7 @@ func TestErrorFallback(t *testing.T) {
 	})
 
 	type TestStruct struct {
-		Field string `log:"field,ser=test_error"`
+		Field string `slog:"field,ser=test_error"`
 	}
 
 	s := TestStruct{Field: "test_value"}
@@ -531,7 +531,7 @@ func TestErrorFallback(t *testing.T) {
 	} else {
 		//var e *MarshalError
 		//errors.As(err, &e)
-		if err.Error() != "log: marshal field Field of type log.TestStruct: log: marshal field Field of type string: serializer error" {
+		if err.Error() != "slog: marshal field Field of type slog.TestStruct: slog: marshal field Field of type string: serializer error" {
 			t.Errorf("2: Expected specific error, got: %v", err)
 		}
 	}
@@ -540,7 +540,7 @@ func TestErrorFallback(t *testing.T) {
 // TestMarshalTo tests MarshalTo function.
 func TestMarshalTo(t *testing.T) {
 	type TestStruct struct {
-		A string `log:"a"`
+		A string `slog:"a"`
 	}
 
 	s := TestStruct{A: "value_a"}
@@ -561,12 +561,12 @@ func TestMarshalTo(t *testing.T) {
 // TestRegisterSerializerOverwrite tests overwrite warning for RegisterSerializer.
 func TestRegisterSerializerOverwrite(t *testing.T) {
 	// This test primarily ensures the function doesn't panic and logs a warning.
-	// In a real test, you might capture log output to verify the warning.
+	// In a real test, you might capture slog output to verify the warning.
 	RegisterSerializer("test_dup", func(v any) ([]byte, error) { return json.Marshal("first") })
 	RegisterSerializer("test_dup", func(v any) ([]byte, error) { return json.Marshal("second") })
 
 	s := struct {
-		Field string `log:"field,ser=test_dup"`
+		Field string `slog:"field,ser=test_dup"`
 	}{Field: "ignored"}
 
 	// Debug: Let's test the serializer directly
@@ -596,7 +596,7 @@ func TestRegisterSerializerOverwrite(t *testing.T) {
 // TestPrecision tests precision option for float fields.
 func TestPrecision(t *testing.T) {
 	type TestStruct struct {
-		Value float64 `log:"value,precision=2"`
+		Value float64 `slog:"value,precision=2"`
 	}
 
 	s := TestStruct{Value: 123.456789}
@@ -615,7 +615,7 @@ func TestPrecision(t *testing.T) {
 // TestStringOption tests string option for fields.
 func TestStringOption(t *testing.T) {
 	type TestStruct struct {
-		Number int `log:"number,string"`
+		Number int `slog:"number,string"`
 	}
 
 	s := TestStruct{Number: 42}
@@ -634,13 +634,13 @@ func TestStringOption(t *testing.T) {
 // TestInline tests inline option for struct fields.
 func TestInline(t *testing.T) {
 	type Address struct {
-		City string `log:"city"`
-		Zip  string `log:"zip"`
+		City string `slog:"city"`
+		Zip  string `slog:"zip"`
 	}
 
 	type Person struct {
-		Name    string  `log:"name"`
-		Address Address `log:",inline"`
+		Name    string  `slog:"name"`
+		Address Address `slog:",inline"`
 	}
 
 	p := Person{
@@ -674,7 +674,7 @@ func TestEmptyStruct(t *testing.T) {
 	}
 	t.Logf("Marshal result: %s", string(data))
 
-	expected := `{}` // An empty struct with no log tags should result in an empty object
+	expected := `{}` // An empty struct with no slog tags should result in an empty object
 	if string(data) != expected {
 		t.Errorf("Expected %s, got %s", expected, data)
 	}
@@ -708,12 +708,10 @@ func TestMarshalErrorUnwrap(t *testing.T) {
 	}
 }
 
-
-
 // TestContextSupport tests the context-aware marshaling functionality.
 func TestContextSupport(t *testing.T) {
 	type TestStruct struct {
-		Message string `log:"message"`
+		Message string `slog:"message"`
 	}
 
 	s := TestStruct{Message: "Hello World"}
@@ -745,9 +743,9 @@ func TestContextSupport(t *testing.T) {
 // TestSensitiveDataDetection tests the sensitive data detection in error messages.
 func TestSensitiveDataDetection(t *testing.T) {
 	type SensitiveStruct struct {
-		Password string `log:"password,ser=error_serializer"`
-		Email    string `log:"email,ser=error_serializer"`
-		Normal   string `log:"normal,ser=error_serializer"`
+		Password string `slog:"password,ser=error_serializer"`
+		Email    string `slog:"email,ser=error_serializer"`
+		Normal   string `slog:"normal,ser=error_serializer"`
 	}
 
 	// Register an error serializer that will fail
@@ -780,16 +778,16 @@ func TestSensitiveDataDetection(t *testing.T) {
 	}
 }
 
-// TestLogLevel tests the log level functionality.
+// TestLogLevel tests the slog level functionality.
 func TestLogLevel(t *testing.T) {
 	type LogTestStruct struct {
-		Message string `log:"message"`
-		Level   string `log:"level"`
+		Message string `slog:"message"`
+		Level   string `slog:"level"`
 	}
 
 	s := LogTestStruct{Message: "Test message", Level: "info"}
 
-	// Test with different log levels
+	// Test with different slog levels
 	data, err := MarshalWithOpts(s, WithLevel(INFO))
 	if err != nil {
 		t.Fatalf("MarshalWithOpts failed: %v", err)

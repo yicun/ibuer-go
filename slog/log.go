@@ -1,6 +1,6 @@
-// Package log provides field-level JSON logging, outputting only fields with the 'log' tag.
+// Package slog provides field-level JSON logging, outputting only fields with the 'slog' tag.
 // Priority: Struct Logger → ser=xxx → Field Logger → Basic Type → Mask
-package log
+package slog
 
 import (
 	"bytes"
@@ -85,7 +85,7 @@ func MarshalWithOpts(v any, opts ...Option) ([]byte, error) {
 	options := &Options{
 		MaskSensitive:       false,
 		EnableErrorFallback: true,
-		Level:               INFO, // Default log level
+		Level:               INFO, // Default slog level
 	}
 	for _, opt := range opts {
 		opt(options)
@@ -154,28 +154,28 @@ func MarshalTo(w io.Writer, v any, opts ...Option) error {
 // RegisterMask registers a mask function.
 func RegisterMask(name string, fn MaskFunc) {
 	if name == "" {
-		fmt.Printf("log: mask name is nil, return\n")
+		fmt.Printf("slog: mask name is nil, return\n")
 		return
 	}
 	// Use LoadOrStore for atomic operation
 	if _, loaded := maskReg.LoadOrStore(name, fn); loaded {
 		// Overwrite existing mask atomically
 		maskReg.Store(name, fn)
-		fmt.Printf("log: mask %q already registered, overwritten\n", name)
+		fmt.Printf("slog: mask %q already registered, overwritten\n", name)
 	}
 }
 
 // RegisterSerializer registers a serializer function.
 func RegisterSerializer(name string, fn SerializerFunc) {
 	if name == "" {
-		fmt.Printf("log: serializer name is nil, return\n")
+		fmt.Printf("slog: serializer name is nil, return\n")
 		return
 	}
 	// Use LoadOrStore for atomic operation
 	if _, loaded := serReg.LoadOrStore(name, fn); loaded {
 		// Overwrite existing serializer atomically
 		serReg.Store(name, fn)
-		fmt.Printf("log: serializer %q already registered, overwritten\n", name)
+		fmt.Printf("slog: serializer %q already registered, overwritten\n", name)
 	}
 }
 

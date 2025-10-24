@@ -1,6 +1,6 @@
-// Package log provides field-level JSON logging, outputting only fields with the 'log' tag.
+// Package slog provides field-level JSON logging, outputting only fields with the 'slog' tag.
 // Priority: Struct Logger → Field Logger → ser=xxx → Basic Type → Mask
-package log
+package slog
 
 import (
 	"fmt"
@@ -17,9 +17,9 @@ type MarshalError struct {
 
 func (e *MarshalError) Error() string {
 	if e.Field != "" {
-		return fmt.Sprintf("log: marshal field %s of type %s: %v", e.Field, e.Type, e.Err)
+		return fmt.Sprintf("slog: marshal field %s of type %s: %v", e.Field, e.Type, e.Err)
 	}
-	return fmt.Sprintf("log: marshal type %s: %v", e.Type, e.Err)
+	return fmt.Sprintf("slog: marshal type %s: %v", e.Type, e.Err)
 }
 
 func (e *MarshalError) Unwrap() error {
@@ -78,11 +78,11 @@ func WithLevel(level LogLevel) Option {
 // ----- Interfaces -----
 
 type (
-	Logger interface {
+	SLogger interface {
 		MarshalLog() ([]byte, error)
 	}
 
-	ConditionalLogger interface {
+	SConditionalLogger interface {
 		ShouldLog() bool
 	}
 

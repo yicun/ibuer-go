@@ -31,7 +31,7 @@ sensitive-data masking, conditional emission, tracing, levels, etc.—is provide
 
 ```bash
 go mod init your-project
-go get github.com/yicun/ibuer-log-go/log   # replace with real repo
+go get github.com/yicun/ibuer-slog-go/slog   # replace with real repo
 ```
 
 Or drop the package locally under `./log` and import it directly.
@@ -50,13 +50,13 @@ import (
 )
 
 type User struct {
-	ID       int       `log:"id"`
-	Name     string    `log:"name"`
-	Email    string    `log:"email,mask=email"`        // built-in e-mail mask
-	Phone    string    `log:"phone,mask=phone"`        // built-in phone mask
-	Created  time.Time `log:"created_at,ser=time_log"` // custom time layout
-	Active   bool      `log:"is_active"`
-	Password string    `log:"-"` // ignored
+	ID       int       `slog:"id"`
+	Name     string    `slog:"name"`
+	Email    string    `slog:"email,mask=email"`        // built-in e-mail mask
+	Phone    string    `slog:"phone,mask=phone"`        // built-in phone mask
+	Created  time.Time `slog:"created_at,ser=time_log"` // custom time layout
+	Active   bool      `slog:"is_active"`
+	Password string    `slog:"-"` // ignored
 }
 
 func main() {
@@ -83,9 +83,9 @@ func main() {
 
 ```go
 type S struct {
-A string `log:"field_a"`
-B string `log:"-"` // skipped
-C string `log:"field_c,omitempty"` // omitted if zero
+A string `slog:"field_a"`
+B string `slog:"-"` // skipped
+C string `slog:"field_c,omitempty"` // omitted if zero
 }
 ```
 
@@ -93,8 +93,8 @@ C string `log:"field_c,omitempty"` // omitted if zero
 
 ```go
 type Event struct {
-Ts     time.Time `log:"ts,ser=time_unix_ms"`
-Amount float64   `log:"amount,ser=currency_cny"`
+Ts     time.Time `slog:"ts,ser=time_unix_ms"`
+Amount float64   `slog:"amount,ser=currency_cny"`
 }
 
 e := Event{Ts: time.Now(), Amount: 123.45}
@@ -106,18 +106,18 @@ b, _ := log.Marshal(e)
 
 ```go
 type User struct {
-Phone string `log:"phone,mask=phone"` // 138****8000
-Email string `log:"email,mask=email"` // a**e@***.com
+Phone string `slog:"phone,mask=phone"` // 138****8000
+Email string `slog:"email,mask=email"` // a**e@***.com
 }
 ```
 
 ### 4. Inline structs (`inline`)
 
 ```go
-type Addr  struct{ City, Zip string `log:"city,zip"` }
+type Addr  struct{ City, Zip string `slog:"city,zip"` }
 type Person struct {
-Name string `log:"name"`
-Addr `log:",inline"` // flattens fields
+Name string `slog:"name"`
+Addr `slog:",inline"` // flattens fields
 }
 ```
 
@@ -130,7 +130,7 @@ func (c Custom) MarshalLog() ([]byte, error) {
 return []byte(`{"custom":"`+c.V+`"}`), nil
 }
 
-type Container struct{ Custom Custom `log:"custom"` }
+type Container struct{ Custom Custom `slog:"custom"` }
 ```
 
 ### 6. `ConditionalLogger` interface
@@ -144,8 +144,8 @@ Show  bool
 func (m Maybe) ShouldLog() bool { return m.Show }
 
 type Data struct {
-Always string `log:"always"`
-Maybe Maybe   `log:"maybe"`
+Always string `slog:"always"`
+Maybe Maybe   `slog:"maybe"`
 }
 ```
 

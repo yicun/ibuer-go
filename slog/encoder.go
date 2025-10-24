@@ -1,6 +1,6 @@
-// Package log provides field-level JSON logging, outputting only fields with the 'log' tag.
-// Priority: Field log:ser=xxx → Field Struct Logger → Basic Type → Mask
-package log
+// Package slog provides field-level JSON logging, outputting only fields with the 'slog' tag.
+// Priority: Field slog:ser=xxx → Field Struct Logger → Basic Type → Mask
+package slog
 
 import (
 	"encoding/json"
@@ -185,7 +185,7 @@ func (e *encoder) encodeStruct(rv reflect.Value) error {
 	// Get cached struct info
 	info := e.getStructInfo(rt)
 
-	// 2. Has log tags → process only these fields
+	// 2. Has slog tags → process only these fields
 	if info.hasLogTag {
 		m := make(map[string]any)
 		for _, fi := range info.fields {
@@ -256,7 +256,7 @@ func (e *encoder) encodeStruct(rv reflect.Value) error {
 }
 
 func (e *encoder) encodeField(sf reflect.StructField, fv reflect.Value, fi fieldInfo, m map[string]any) error {
-	// Check if field should be ignored (log:"-")
+	// Check if field should be ignored (slog:"-")
 	if fi.opts.Name == "-" {
 		return nil
 	}
@@ -267,7 +267,7 @@ func (e *encoder) encodeField(sf reflect.StructField, fv reflect.Value, fi field
 			return nil
 		}
 		// If ShouldLog() returns true, serialize the entire struct using JSON marshaling
-		// This preserves all struct fields, not just those with log tags
+		// This preserves all struct fields, not just those with slog tags
 		var sub encoder
 		sub.visited = e.visited
 		sub.opts = e.opts
@@ -286,14 +286,14 @@ func (e *encoder) encodeField(sf reflect.StructField, fv reflect.Value, fi field
 		return nil
 	}
 
-	// Priority: Field log:ser=xxx → Field Struct Logger → Basic Type → Mask
+	// Priority: Field slog:ser=xxx → Field Struct Logger → Basic Type → Mask
 
 	// Early check for omitempty (both field-level and global)
 	if (fi.opts.OmitEmpty || e.opts.OmitEmptyByDefault) && isEmpty(fv) {
 		return nil
 	}
 
-	// 1. Field log:"ser=xxx" (field-level custom serializer - highest priority)
+	// 1. Field slog:"ser=xxx" (field-level custom serializer - highest priority)
 	if handled, err := e.encodeWithSerializer(fv, sf, fi, m); handled || err != nil {
 		return err
 	}

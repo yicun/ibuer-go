@@ -1,5 +1,5 @@
-// Package log_test provides examples for the log package.
-package log
+// Package log_test provides examples for the slog package.
+package slog
 
 import (
 	"encoding/json"
@@ -8,22 +8,22 @@ import (
 	"time"
 )
 
-// User 示例结构体，展示了多种 log 标签用法
+// User 示例结构体，展示了多种 slog 标签用法
 type User struct {
-	ID       int       `log:"id"`
-	Name     string    `log:"name"`
-	Email    string    `log:"email,mask=email"`        // 使用内置邮箱脱敏
-	Phone    string    `log:"phone,mask=phone"`        // 使用内置手机号脱敏
-	Created  time.Time `log:"created_at,ser=time_log"` // 使用自定义时间序列化器
-	Active   bool      `log:"is_active"`
-	Password string    `log:"-"` // 忽略此字段
+	ID       int       `slog:"id"`
+	Name     string    `slog:"name"`
+	Email    string    `slog:"email,mask=email"`        // 使用内置邮箱脱敏
+	Phone    string    `slog:"phone,mask=phone"`        // 使用内置手机号脱敏
+	Created  time.Time `slog:"created_at,ser=time_log"` // 使用自定义时间序列化器
+	Active   bool      `slog:"is_active"`
+	Password string    `slog:"-"` // 忽略此字段
 	// 嵌套结构体示例
-	Address Address `log:"address,inline"` // 内联地址字段
+	Address Address `slog:"address,inline"` // 内联地址字段
 }
 
 type Address struct {
-	City string `log:"city"`
-	Zip  string `log:"zip"`
+	City string `slog:"city"`
+	Zip  string `slog:"zip"`
 }
 
 // APIResponse 示例结构体，展示 Logger 接口用法
@@ -33,7 +33,7 @@ type APIResponse struct {
 	Data    any
 }
 
-// MarshalLog 实现 log.Logger 接口，自定义序列化逻辑
+// MarshalLog 实现 slog.Logger 接口，自定义序列化逻辑
 func (r APIResponse) MarshalLog() ([]byte, error) {
 	// 构建自定义 JSON 结构
 	custom := map[string]any{
@@ -50,7 +50,7 @@ type ConditionalUser struct {
 	Show bool
 }
 
-// ShouldLog 实现 log.ConditionalLogger 接口
+// ShouldLog 实现 slog.ConditionalLogger 接口
 func (u ConditionalUser) ShouldLog() bool {
 	return u.Show
 }
@@ -145,9 +145,9 @@ func ExampleMarshalWithIndent() {
 
 func ExampleCustomSerializer() {
 	type Event struct {
-		Timestamp time.Time     `log:"ts,ser=time_unix_ms"`     // Unix 毫秒时间戳
-		Duration  time.Duration `log:"dur,ser=duration_sec_2"`  // 秒，保留两位小数
-		Amount    float64       `log:"amount,ser=currency_usd"` // 美元格式
+		Timestamp time.Time     `slog:"ts,ser=time_unix_ms"`     // Unix 毫秒时间戳
+		Duration  time.Duration `slog:"dur,ser=duration_sec_2"`  // 秒，保留两位小数
+		Amount    float64       `slog:"amount,ser=currency_usd"` // 美元格式
 	}
 
 	event := Event{
@@ -216,7 +216,7 @@ func ExampleRegisterSerializer() {
 	})
 
 	type Custom struct {
-		Text string `log:"text,ser=upper"`
+		Text string `slog:"text,ser=upper"`
 	}
 
 	c := Custom{Text: "hello world"}
@@ -239,7 +239,7 @@ func ExampleRegisterMask() {
 	})
 
 	type Custom struct {
-		SSN string `log:"ssn,mask=first_last"`
+		SSN string `slog:"ssn,mask=first_last"`
 	}
 
 	c := Custom{SSN: "123456789"}
