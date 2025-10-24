@@ -3,6 +3,8 @@ package sdebug
 import (
 	"encoding/json"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
 type User struct {
@@ -18,17 +20,31 @@ func TestDefaultDebugInfo(t *testing.T) {
 		Name: "test",
 		Age:  10,
 	}
-	user.SetDebugInfo(map[string]any{
+
+	err := user.SetDebugInfo(map[string]any{
 		"first": "init",
 	})
-	user.AddDebugInfo("second", "test")
-	user.AddDebugInfo2("third", "k1", "v1")
-	jsonBytes, _ := json.Marshal(user)
+	require.NoError(t, err)
+
+	err = user.AddDebugInfo("second", "test")
+	require.NoError(t, err)
+
+	err = user.AddDebugInfo2("third", "k1", "v1")
+	require.NoError(t, err)
+
+	jsonBytes, err := json.Marshal(user)
+	require.NoError(t, err)
 	t.Log(string(jsonBytes))
 
 	user2 := &User{}
-	_ = json.Unmarshal(jsonBytes, user2)
-	t.Log(user2.GetDebugInfoMap())
-	jsonBytes2, _ := json.Marshal(user2)
+	err = json.Unmarshal(jsonBytes, user2)
+	require.NoError(t, err)
+
+	debugMap, err := user2.GetDebugInfoMap()
+	require.NoError(t, err)
+	t.Log(debugMap)
+
+	jsonBytes2, err := json.Marshal(user2)
+	require.NoError(t, err)
 	t.Log(string(jsonBytes2))
 }
