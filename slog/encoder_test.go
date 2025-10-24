@@ -10,10 +10,10 @@ import (
 
 // Test structures for priority testing
 
-// TestStructLogger implements both Logger and has slog tags
+// TestStructLogger implements both SLogger and has log tags
 type TestStructLogger struct {
-	Value string `slog:"value"`
-	Name  string `slog:"name"`
+	Value string `log:"value"`
+	Name  string `log:"name"`
 }
 
 func (t TestStructLogger) MarshalLog() ([]byte, error) {
@@ -25,17 +25,17 @@ func (t TestStructLogger) MarshalLog() ([]byte, error) {
 
 // TestFieldSerializer has field-level serializer
 type TestFieldSerializer struct {
-	NormalField string    `slog:"normal_field"`
-	TimeField   time.Time `slog:"time_field,ser=time_rfc3339"`
-	AmountField float64   `slog:"amount_field,ser=currency_cny"`
+	NormalField string    `log:"normal_field"`
+	TimeField   time.Time `log:"time_field,ser=time_rfc3339"`
+	AmountField float64   `log:"amount_field,ser=currency_cny"`
 }
 
 // TestFieldLogger has Logger interface on field
 type TestFieldLogger struct {
-	ID          int                  `slog:"id"`
-	Name        string               `slog:"name"`
-	LoggerField TestFieldLoggerField `slog:"logger_field"`
-	BasicField  string               `slog:"basic_field"`
+	ID          int                  `log:"id"`
+	Name        string               `log:"name"`
+	LoggerField TestFieldLoggerField `log:"logger_field"`
+	BasicField  string               `log:"basic_field"`
 }
 
 type TestFieldLoggerField struct {
@@ -49,22 +49,22 @@ func (f TestFieldLoggerField) MarshalLog() ([]byte, error) {
 	})
 }
 
-// TestComplexPriority tests the new priority order: Field slog:"ser=xxx" → Field Struct Logger → Basic Type → Mask
+// TestComplexPriority tests the new priority order: Field log:"ser=xxx" → Field Struct Logger → Basic Type → Mask
 type TestComplexPriority struct {
-	// This field has both Logger interface and ser tag - ser should win
-	LoggerWithSer TestLoggerWithSer `slog:"logger_with_ser,ser=first_priority"`
+	// This field has both SLogger interface and ser tag - ser should win
+	LoggerWithSer TestLoggerWithSer `log:"logger_with_ser,ser=first_priority"`
 
-	// This field has Logger interface only
-	LoggerOnly TestLoggerOnly `slog:"logger_only"`
+	// This field has SLogger interface only
+	LoggerOnly TestLoggerOnly `log:"logger_only"`
 
 	// This field has ser tag only
-	SerOnly time.Time `slog:"ser_only,ser=time_rfc3339"`
+	SerOnly time.Time `log:"ser_only,ser=time_rfc3339"`
 
 	// This field is basic type
-	BasicOnly string `slog:"basic_only"`
+	BasicOnly string `log:"basic_only"`
 
 	// This field has mask
-	MaskedField string `slog:"masked_field,mask=phone"`
+	MaskedField string `log:"masked_field,mask=phone"`
 }
 
 type TestLoggerWithSer struct {
@@ -89,9 +89,9 @@ func (t TestLoggerOnly) MarshalLog() ([]byte, error) {
 	})
 }
 
-// TestPriorityOrder verifies the new priority: Field slog:"ser=xxx" → Field Struct Logger → Basic Type → Mask
+// TestPriorityOrder verifies the new priority: Field log:"ser=xxx" → Field Struct Logger → Basic Type → Mask
 func TestPriorityOrder(t *testing.T) {
-	// Test 0: Struct Logger
+	// Test 0: Struct SLogger
 	TestStructLoggerPriority(t)
 
 	// Test 1: Field-level serializer (ser=xxx) has highest priority
@@ -215,15 +215,15 @@ func TestFieldLoggerPriority(t *testing.T) {
 func TestComplexPriorityOrder(t *testing.T) {
 	now := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
 	data := TestComplexPriority{
-		// LoggerWithSer TestLoggerWithSer `slog:"logger_with_ser,ser=first_priority"`
+		// LoggerWithSer TestLoggerWithSer `log:"logger_with_ser,ser=first_priority"`
 		LoggerWithSer: TestLoggerWithSer{Time: now},
-		// LoggerOnly TestLoggerOnly `slog:"logger_only"`
+		// LoggerOnly TestLoggerOnly `log:"logger_only"`
 		LoggerOnly: TestLoggerOnly{Value: "logger_value"},
-		// SerOnly time.Time `slog:"ser_only,ser=time_rfc3339"`
+		// SerOnly time.Time `log:"ser_only,ser=time_rfc3339"`
 		SerOnly: now,
-		// BasicOnly string `slog:"basic_only"`
+		// BasicOnly string `log:"basic_only"`
 		BasicOnly: "basic_value",
-		// MaskedField string `slog:"masked_field,mask=phone"`
+		// MaskedField string `log:"masked_field,mask=phone"`
 		MaskedField: "13800138000",
 	}
 	RegisterSerializer("first_priority", func(a any) ([]byte, error) {
@@ -292,7 +292,7 @@ func TestPriorityEdgeCases(t *testing.T) {
 
 func TestEmptySerializerName(t *testing.T) {
 	type EmptySer struct {
-		Field string `slog:"field,ser="`
+		Field string `log:"field,ser="`
 	}
 
 	data := EmptySer{Field: "test_value"}
@@ -315,7 +315,7 @@ func TestEmptySerializerName(t *testing.T) {
 
 func TestNonExistentSerializer(t *testing.T) {
 	type NonExistentSer struct {
-		Field string `slog:"field,ser=nonexistent"`
+		Field string `log:"field,ser=nonexistent"`
 	}
 
 	data := NonExistentSer{Field: "test_value"}
@@ -338,10 +338,10 @@ func TestNonExistentSerializer(t *testing.T) {
 
 func TestMultipleFieldsDifferentPriorities(t *testing.T) {
 	type MixedPriorities struct {
-		LoggerField TestLoggerOnly `slog:"logger_field"`
-		SerField    time.Time      `slog:"ser_field,ser=time_rfc3339"`
-		BasicField  string         `slog:"basic_field"`
-		MaskedField string         `slog:"masked_field,mask=email"`
+		LoggerField TestLoggerOnly `log:"logger_field"`
+		SerField    time.Time      `log:"ser_field,ser=time_rfc3339"`
+		BasicField  string         `log:"basic_field"`
+		MaskedField string         `log:"masked_field,mask=email"`
 	}
 
 	now := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
@@ -384,9 +384,9 @@ func TestMultipleFieldsDifferentPriorities(t *testing.T) {
 
 // TestPriorityWithConditionalLogger tests priority with conditional logging
 type ConditionalPriority struct {
-	AlwaysShow     string               `slog:"always_show"`
-	Conditional    TestConditionalField `slog:"conditional"`
-	SerConditional time.Time            `slog:"ser_conditional,ser=time_rfc3339"`
+	AlwaysShow     string               `log:"always_show"`
+	Conditional    TestConditionalField `log:"conditional"`
+	SerConditional time.Time            `log:"ser_conditional,ser=time_rfc3339"`
 }
 
 type TestConditionalField struct {
@@ -480,17 +480,17 @@ func containsSubstring(s, substr string) bool {
 func TestPriorityDocumentation(t *testing.T) {
 	// Create a comprehensive test that demonstrates all priorities in order
 	type ComprehensivePriority struct {
-		// Priority 1: Field slog:"ser=xxx" (highest priority)
-		FieldSer time.Time `slog:"field_ser,ser=time_rfc3339"`
+		// Priority 1: Field log:"ser=xxx" (highest priority)
+		FieldSer time.Time `log:"field_ser,ser=time_rfc3339"`
 
 		// Priority 2: Field Struct Logger
-		FieldLogger TestFieldLoggerField `slog:"field_logger"`
+		FieldLogger TestFieldLoggerField `log:"field_logger"`
 
 		// Priority 3: Basic Type
-		BasicField string `slog:"basic_field"`
+		BasicField string `log:"basic_field"`
 
 		// Priority 4: Mask (applied after serialization)
-		MaskedField string `slog:"masked_field,mask=phone"`
+		MaskedField string `log:"masked_field,mask=phone"`
 	}
 
 	now := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
@@ -541,10 +541,10 @@ func TestPriorityDocumentation(t *testing.T) {
 func TestPriorityPerformance(t *testing.T) {
 	// Create a struct with mixed priorities
 	type PerformanceTest struct {
-		SerField    time.Time      `slog:"ser_field,ser=time_rfc3339"`
-		LoggerField TestLoggerOnly `slog:"logger_field"`
-		BasicField  string         `slog:"basic_field"`
-		MaskField   string         `slog:"mask_field,mask=phone"`
+		SerField    time.Time      `log:"ser_field,ser=time_rfc3339"`
+		LoggerField TestLoggerOnly `log:"logger_field"`
+		BasicField  string         `log:"basic_field"`
+		MaskField   string         `log:"mask_field,mask=phone"`
 	}
 
 	now := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
@@ -600,7 +600,7 @@ func TestPriorityErrorHandling(t *testing.T) {
 
 func testFieldSerializerError(t *testing.T) {
 	type FieldSerError struct {
-		Field string `slog:"field,ser=error_serializer"`
+		Field string `log:"field,ser=error_serializer"`
 	}
 
 	// Register an error serializer
@@ -629,7 +629,7 @@ func testFieldSerializerError(t *testing.T) {
 
 func testFieldLoggerError(t *testing.T) {
 	type FieldLoggerError struct {
-		Field TestErrorLoggerField `slog:"field"`
+		Field TestErrorLoggerField `log:"field"`
 	}
 
 	data := FieldLoggerError{Field: TestErrorLoggerField{Value: "test_value"}}
@@ -663,13 +663,13 @@ func (e TestErrorLoggerField) MarshalLog() ([]byte, error) {
 // TestPriorityWithOmitEmpty tests priority with omitempty
 func TestPriorityWithOmitEmpty(t *testing.T) {
 	type OmitEmptyPriority struct {
-		SerEmpty       string          `slog:"ser_empty,ser=time_rfc3339,omitempty"`
-		LoggerEmpty    TestLoggerOnly  `slog:"logger_empty,omitempty"`
-		LoggerEmptyPtr *TestLoggerOnly `slog:"logger_empty_ptr,omitempty"`
-		BasicEmpty     string          `slog:"basic_empty,omitempty"`
-		SerNonEmpty    time.Time       `slog:"ser_non_empty,ser=time_rfc3339,omitempty"`
-		LoggerNonEmpty TestLoggerOnly  `slog:"logger_non_empty,omitempty"`
-		BasicNonEmpty  string          `slog:"basic_non_empty,omitempty"`
+		SerEmpty       string          `log:"ser_empty,ser=time_rfc3339,omitempty"`
+		LoggerEmpty    TestLoggerOnly  `log:"logger_empty,omitempty"`
+		LoggerEmptyPtr *TestLoggerOnly `log:"logger_empty_ptr,omitempty"`
+		BasicEmpty     string          `log:"basic_empty,omitempty"`
+		SerNonEmpty    time.Time       `log:"ser_non_empty,ser=time_rfc3339,omitempty"`
+		LoggerNonEmpty TestLoggerOnly  `log:"logger_non_empty,omitempty"`
+		BasicNonEmpty  string          `log:"basic_non_empty,omitempty"`
 	}
 
 	now := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
@@ -725,10 +725,10 @@ func TestPriorityWithOmitEmpty(t *testing.T) {
 // BenchmarkPriorityOrder benchmarks the new priority order
 func BenchmarkPriorityOrder(b *testing.B) {
 	type BenchmarkStruct struct {
-		SerField    time.Time      `slog:"ser_field,ser=time_rfc3339"`
-		LoggerField TestLoggerOnly `slog:"logger_field"`
-		BasicField  string         `slog:"basic_field"`
-		MaskField   string         `slog:"mask_field,mask=phone"`
+		SerField    time.Time      `log:"ser_field,ser=time_rfc3339"`
+		LoggerField TestLoggerOnly `log:"logger_field"`
+		BasicField  string         `log:"basic_field"`
+		MaskField   string         `log:"mask_field,mask=phone"`
 	}
 
 	now := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
@@ -753,13 +753,13 @@ func TestPriorityRegression(t *testing.T) {
 	// Test that existing functionality still works with the new priority order
 	type RegressionTest struct {
 		// Mix of different field types that should continue to work
-		StringField  string           `slog:"string_field"`
-		IntField     int              `slog:"int_field"`
-		BoolField    bool             `slog:"bool_field"`
-		TimeField    time.Time        `slog:"time_field,ser=time_rfc3339"`
-		AmountField  float64          `slog:"amount_field,ser=currency_cny"`
-		LoggerField  TestLoggerOnly   `slog:"logger_field"`
-		StructLogger TestStructLogger `slog:"struct_logger"`
+		StringField  string           `log:"string_field"`
+		IntField     int              `log:"int_field"`
+		BoolField    bool             `log:"bool_field"`
+		TimeField    time.Time        `log:"time_field,ser=time_rfc3339"`
+		AmountField  float64          `log:"amount_field,ser=currency_cny"`
+		LoggerField  TestLoggerOnly   `log:"logger_field"`
+		StructLogger TestStructLogger `log:"struct_logger"`
 	}
 
 	now := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)
@@ -819,7 +819,7 @@ func TestPriorityRegression(t *testing.T) {
 // TestMissingSerializerErrorHandling tests that missing serializers are handled correctly
 func TestMissingSerializerErrorHandling(t *testing.T) {
 	type TestStruct struct {
-		Field string `slog:"field,ser=missing_serializer"`
+		Field string `log:"field,ser=missing_serializer"`
 	}
 
 	data := TestStruct{Field: "test_value"}
@@ -858,17 +858,17 @@ func TestMissingSerializerErrorHandling(t *testing.T) {
 // ExamplePriorityOrder Example demonstrating the new priority order
 func TestExamplePriorityOrder(t *testing.T) {
 	type ExampleStruct struct {
-		// Priority 1: Field slog:"ser=xxx" (field-level custom serializer - highest priority)
-		FieldSer time.Time `slog:"field_ser,ser=time_rfc3339"`
+		// Priority 1: Field log:"ser=xxx" (field-level custom serializer - highest priority)
+		FieldSer time.Time `log:"field_ser,ser=time_rfc3339"`
 
 		// Priority 2: Field Struct Logger (field with Logger interface)
-		FieldLogger TestLoggerOnly `slog:"field_logger"`
+		FieldLogger TestLoggerOnly `log:"field_logger"`
 
 		// Priority 3: Basic Type (default serialization)
-		BasicField string `slog:"basic_field"`
+		BasicField string `log:"basic_field"`
 
 		// Priority 4: Mask (applied after serialization)
-		MaskedField string `slog:"masked_field,mask=phone"`
+		MaskedField string `log:"masked_field,mask=phone"`
 	}
 
 	now := time.Date(2025, 1, 1, 12, 0, 0, 0, time.UTC)

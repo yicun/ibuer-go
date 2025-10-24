@@ -34,8 +34,9 @@ type SDebugStorage struct {
 // Deep copy is enabled by default for data integrity.
 //
 // Example:
-//   debug := sdebug.NewDebugInfo(true)  // Enable debugging with deep copy protection
-//   debug := sdebug.NewDebugInfo(false) // Disable debugging for maximum performance
+//
+//	debug := sdebug.NewDebugInfo(true)  // Enable debugging with deep copy protection
+//	debug := sdebug.NewDebugInfo(false) // Disable debugging for maximum performance
 //
 // Returns: A new SDebugStorage instance ready for use
 func NewDebugInfo(enabled bool) *SDebugStorage {
@@ -69,17 +70,19 @@ func NewDebugInfo(enabled bool) *SDebugStorage {
 // - Complex objects: JSON serialization fallback
 //
 // Example:
-//   err := debug.Set("user", "name", "Alice")           // Simple value
-//   err := debug.Set("metrics", "count", 42)            // Number
-//   err := debug.Set("data", "", map[string]any{        // Map expansion
-//       "field1": "value1",
-//       "field2": "value2",
-//   })
+//
+//	err := debug.Set("user", "name", "Alice")           // Simple value
+//	err := debug.Set("metrics", "count", 42)            // Number
+//	err := debug.Set("data", "", map[string]any{        // Map expansion
+//	    "field1": "value1",
+//	    "field2": "value2",
+//	})
 //
 // Parameters:
-//   topKey: Top-level category/key (cannot be empty)
-//   subKey: Sub-level key (can be empty for map expansion)
-//   val: Value to store (any type supported)
+//
+//	topKey: Top-level category/key (cannot be empty)
+//	subKey: Sub-level key (can be empty for map expansion)
+//	val: Value to store (any type supported)
 //
 // Returns: Error if topKey is empty, nil otherwise
 func (d *SDebugStorage) Set(topKey, subKey string, val any) error {
@@ -538,10 +541,11 @@ func deepCopyValue(val any) any {
 // Memory: O(n) for the new map plus memory for all deep copied values
 //
 // Example:
-//   original := map[string]any{"key": "value", "nested": map[string]any{"inner": "data"}}
-//   copy := deepCopyMap(original)
-//   copy["key"] = "modified"        // Doesn't affect original
-//   copy["nested"].(map[string]any)["inner"] = "changed" // Doesn't affect original
+//
+//	original := map[string]any{"key": "value", "nested": map[string]any{"inner": "data"}}
+//	copy := deepCopyMap(original)
+//	copy["key"] = "modified"        // Doesn't affect original
+//	copy["nested"].(map[string]any)["inner"] = "changed" // Doesn't affect original
 //
 // Returns: Deep copy of the input map, or nil if input is nil.
 func deepCopyMap(m map[string]any) map[string]any {
@@ -568,10 +572,11 @@ func deepCopyMap(m map[string]any) map[string]any {
 // Memory: O(n) for the new slice plus memory for all deep copied elements
 //
 // Example:
-//   original := []any{"string", 42, map[string]any{"key": "value"}}
-//   copy := deepCopySlice(original)
-//   copy[0] = "modified"                    // Doesn't affect original
-//   copy[2].(map[string]any)["key"] = "new"  // Doesn't affect original
+//
+//	original := []any{"string", 42, map[string]any{"key": "value"}}
+//	copy := deepCopySlice(original)
+//	copy[0] = "modified"                    // Doesn't affect original
+//	copy[2].(map[string]any)["key"] = "new"  // Doesn't affect original
 //
 // Returns: Deep copy of the input slice, or nil if input is nil.
 func deepCopySlice(slice []any) []any {
@@ -597,9 +602,10 @@ func deepCopySlice(slice []any) []any {
 // Memory: O(n) for the new byte slice
 //
 // Example:
-//   original := []byte{1, 2, 3, 4, 5}
-//   copy := deepCopyByteSlice(original)
-//   copy[0] = 99  // Doesn't affect original
+//
+//	original := []byte{1, 2, 3, 4, 5}
+//	copy := deepCopyByteSlice(original)
+//	copy[0] = 99  // Doesn't affect original
 //
 // Returns: Deep copy of the input byte slice, or nil if input is nil.
 func deepCopyByteSlice(slice []byte) []byte {
@@ -625,9 +631,10 @@ func deepCopyByteSlice(slice []byte) []byte {
 // Memory: O(n) for the new map plus memory for all deep copied values
 //
 // Example:
-//   original := map[any]any{1: "one", "two": 2, 3.14: "pi"}
-//   copy := deepCopyAnyMap(original)
-//   copy[1] = "modified"  // Doesn't affect original
+//
+//	original := map[any]any{1: "one", "two": 2, 3.14: "pi"}
+//	copy := deepCopyAnyMap(original)
+//	copy[1] = "modified"  // Doesn't affect original
 //
 // Returns: Deep copy of the input map, or nil if input is nil.
 func deepCopyAnyMap(m map[any]any) map[any]any {
@@ -660,10 +667,11 @@ func deepCopyAnyMap(m map[any]any) map[any]any {
 // Limitations: Types must be JSON-serializable
 //
 // Example:
-//   type CustomStruct struct { Name string `json:"name"` }
-//   original := CustomStruct{Name: "test"}
-//   copy := deepCopyByJSON(original)
-//   copy.(map[string]any)["name"] = "modified"  // Doesn't affect original
+//
+//	type CustomStruct struct { Name string `json:"name"` }
+//	original := CustomStruct{Name: "test"}
+//	copy := deepCopyByJSON(original)
+//	copy.(map[string]any)["name"] = "modified"  // Doesn't affect original
 //
 // Returns: Deep copy as interface{}, or nil if serialization fails.（通用但较慢）
 func deepCopyByJSON(val any) any {

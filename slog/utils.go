@@ -1,4 +1,4 @@
-// Package slog provides field-level JSON logging, outputting only fields with the 'slog' tag.
+// Package slog provides field-level JSON logging, outputting only fields with the 'log' tag.
 // Priority: Struct Logger → Field Logger → ser=xxx → Basic Type → Mask
 package slog
 

@@ -1,5 +1,3 @@
-// Package slog provides field-level JSON logging, outputting only fields with the 'slog' tag.
-// Priority: Struct Logger → Field Logger → ser=xxx → Basic Type → Mask
 package slog
 
 import (

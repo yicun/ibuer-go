@@ -1,5 +1,5 @@
-// Package slog provides field-level JSON logging, outputting only fields with the 'slog' tag.
-// Priority: Field slog:ser=xxx → Field Struct Logger → Basic Type → Mask
+// Package slog provides field-level JSON logging, outputting only fields with the 'log' tag.
+// Priority: Field log:ser=xxx → Field Struct SLogger → Basic Type → Mask
 package slog
 
 import (
@@ -46,13 +46,13 @@ func releaseEncoder(enc *encoder) {
 
 func (e *encoder) encode(v any) error {
 	// Check conditional logging
-	if cl, ok := v.(ConditionalLogger); ok && !cl.ShouldLog() {
+	if cl, ok := v.(SConditionalLogger); ok && !cl.ShouldLog() {
 		e.out = nil
 		return nil
 	}
 
 	if !e.opts.DisableLoggerInterface {
-		if lg, ok := v.(Logger); ok {
+		if lg, ok := v.(SLogger); ok {
 			b, err := lg.MarshalLog()
 			if err != nil {
 				return err
@@ -62,7 +62,7 @@ func (e *encoder) encode(v any) error {
 		}
 		rv := reflect.ValueOf(v)
 		if rv.Kind() != reflect.Ptr && rv.CanAddr() {
-			if lg, ok := rv.Addr().Interface().(Logger); ok {
+			if lg, ok := rv.Addr().Interface().(SLogger); ok {
 				b, err := lg.MarshalLog()
 				if err != nil {
 					return err
@@ -160,9 +160,9 @@ func (e *encoder) encodeReflect(rv reflect.Value) error {
 func (e *encoder) encodeStruct(rv reflect.Value) error {
 	rt := rv.Type()
 
-	// 1. Struct Logger (if not disabled)
+	// 1. Struct SLogger (if not disabled)
 	if !e.opts.DisableLoggerInterface {
-		if lg, ok := rv.Interface().(Logger); ok {
+		if lg, ok := rv.Interface().(SLogger); ok {
 			b, err := lg.MarshalLog()
 			if err != nil {
 				return &MarshalError{Type: rt, Err: err}
@@ -171,7 +171,7 @@ func (e *encoder) encodeStruct(rv reflect.Value) error {
 			return nil
 		}
 		if rv.CanAddr() {
-			if lg, ok := rv.Addr().Interface().(Logger); ok {
+			if lg, ok := rv.Addr().Interface().(SLogger); ok {
 				b, err := lg.MarshalLog()
 				if err != nil {
 					return &MarshalError{Type: rt, Err: err}
@@ -185,7 +185,7 @@ func (e *encoder) encodeStruct(rv reflect.Value) error {
 	// Get cached struct info
 	info := e.getStructInfo(rt)
 
-	// 2. Has slog tags → process only these fields
+	// 2. Has log tags → process only these fields
 	if info.hasLogTag {
 		m := make(map[string]any)
 		for _, fi := range info.fields {
@@ -256,18 +256,18 @@ func (e *encoder) encodeStruct(rv reflect.Value) error {
 }
 
 func (e *encoder) encodeField(sf reflect.StructField, fv reflect.Value, fi fieldInfo, m map[string]any) error {
-	// Check if field should be ignored (slog:"-")
+	// Check if field should be ignored (log:"-")
 	if fi.opts.Name == "-" {
 		return nil
 	}
 
 	// Check conditional logging
-	if cl, ok := fv.Interface().(ConditionalLogger); ok {
+	if cl, ok := fv.Interface().(SConditionalLogger); ok {
 		if !cl.ShouldLog() {
 			return nil
 		}
 		// If ShouldLog() returns true, serialize the entire struct using JSON marshaling
-		// This preserves all struct fields, not just those with slog tags
+		// This preserves all struct fields, not just those with log tags
 		var sub encoder
 		sub.visited = e.visited
 		sub.opts = e.opts
@@ -286,21 +286,21 @@ func (e *encoder) encodeField(sf reflect.StructField, fv reflect.Value, fi field
 		return nil
 	}
 
-	// Priority: Field slog:ser=xxx → Field Struct Logger → Basic Type → Mask
+	// Priority: Field log:ser=xxx → Field Struct SLogger → Basic Type → Mask
 
 	// Early check for omitempty (both field-level and global)
 	if (fi.opts.OmitEmpty || e.opts.OmitEmptyByDefault) && isEmpty(fv) {
 		return nil
 	}
 
-	// 1. Field slog:"ser=xxx" (field-level custom serializer - highest priority)
+	// 1. Field log:"ser=xxx" (field-level custom serializer - highest priority)
 	if handled, err := e.encodeWithSerializer(fv, sf, fi, m); handled || err != nil {
 		return err
 	}
 
-	// 2. Field Struct Logger (field with Logger interface)
+	// 2. Field Struct SLogger (field with SLogger interface)
 	if !e.opts.DisableLoggerInterface {
-		if lg, ok := fv.Interface().(Logger); ok && fv.CanInterface() {
+		if lg, ok := fv.Interface().(SLogger); ok && fv.CanInterface() {
 			b, err := lg.MarshalLog()
 			if err != nil {
 				// If error fallback is enabled, output error info
@@ -311,7 +311,7 @@ func (e *encoder) encodeField(sf reflect.StructField, fv reflect.Value, fi field
 				}
 				return err
 			}
-			// Note: Logger interface results are not subject to omitempty
+			// Note: SLogger interface results are not subject to omitempty
 			m[fi.opts.Name] = json.RawMessage(b)
 			return nil
 		}
@@ -338,13 +338,13 @@ func (e *encoder) createErrorString(fieldName string, fv reflect.Value, err erro
 	return errorInfo
 }
 
-// encodeWithLogger handles encoding using the Logger interface (highest priority)
+// encodeWithLogger handles encoding using the SLogger interface (highest priority)
 func (e *encoder) encodeWithLogger(fv reflect.Value, sf reflect.StructField, fi fieldInfo, m map[string]any) (bool, error) {
 	if e.opts.DisableLoggerInterface {
 		return false, nil
 	}
 
-	if lg, ok := fv.Interface().(Logger); ok && fv.CanInterface() {
+	if lg, ok := fv.Interface().(SLogger); ok && fv.CanInterface() {
 		b, err := lg.MarshalLog()
 		if err != nil {
 			// If error fallback is enabled, output error info
@@ -355,7 +355,7 @@ func (e *encoder) encodeWithLogger(fv reflect.Value, sf reflect.StructField, fi 
 			}
 			return true, err
 		}
-		// Note: Logger interface results are not subject to omitempty
+		// Note: SLogger interface results are not subject to omitempty
 		m[fi.opts.Name] = json.RawMessage(b)
 		return true, nil
 	}
