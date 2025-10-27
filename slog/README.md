@@ -680,7 +680,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-# SLog - 高性能结构化日志库 (Chinese Documentation)
+# SLog - 高性能结构化日志库 (GO语言版)
 
 [![Go Version](https://img.shields.io/badge/go-%3E%3D1.23-blue.svg)](https://golang.org/doc/go1.23)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)

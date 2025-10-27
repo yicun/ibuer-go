@@ -14,6 +14,7 @@ A collection of **high-performance**, **enterprise-grade** Go libraries designed
 |---------|-------------|-------------|---------|----------|
 | **SLog** | Structured Logging | ~450ns/op | 0 allocations | Enterprise logging with security |
 | **SDebug** | Debug Storage | ~89ns/op | 0 allocations | High-frequency debugging |
+| **SCopy** | Deep Copy | ~53ns/op | 48B/op | High-performance object copying |
 
 ---
 
@@ -33,6 +34,13 @@ A collection of **high-performance**, **enterprise-grade** Go libraries designed
 - **1,459x faster** ToMap operations
 - Ideal for **trading systems** and **real-time monitoring**
 
+### 🔄 [SCopy](./scopy) - High-Performance Deep Copy
+- **Nanosecond-level** primitive copying (~53ns)
+- **Complete type support** for all Go types
+- **Cycle detection** prevents infinite loops
+- **Type caching** for repeated struct operations
+- Perfect for **state management** and **data processing**
+
 ---
 
 ## 🎯 Quick Start
@@ -40,12 +48,14 @@ A collection of **high-performance**, **enterprise-grade** Go libraries designed
 ```bash
 go get github.com/yicun/ibuer-go/slog
 go get github.com/yicun/ibuer-go/sdebug
+go get github.com/yicun/ibuer-go/scopy
 ```
 
 ```go
 import (
     "github.com/yicun/ibuer-go/slog"
     "github.com/yicun/ibuer-go/sdebug"
+    "github.com/yicun/ibuer-go/scopy"
 )
 
 // High-performance logging
@@ -56,6 +66,10 @@ logger.Info("User created", user)
 debug := sdebug.NewDebugInfo(true)
 debug.Set("user", "id", 123)
 debug.Incr("metrics", "requests", 1)
+
+// High-performance deep copy
+copier := scopy.New(nil)
+copied, err := copier.Copy(complexObject)
 ```
 
 ---
@@ -93,6 +107,7 @@ Both libraries are built with **enterprise-grade** architecture:
 |-----------|------------------|----------|-------------|
 | JSON Marshal | ~3,200ns | ~450ns | **7.1x faster** |
 | Debug ToMap | ~9,251ns | ~6.3ns | **1,459x faster** |
+| Deep Copy (int) | N/A | ~53ns | **Ultra-fast** |
 | Memory Alloc | 1,536B | 0B | **Infinite reduction** |
 
 ---
@@ -113,6 +128,13 @@ logger.WithFields(slog.Fields{
     "service": "order-processor",
     "trace_id": traceID,
 }).Info("Order processed", order)
+```
+
+### Data Processing
+```go
+// High-performance state copying
+copier := scopy.New(&scopy.Options{EnableCache: true})
+copiedState, err := copier.Copy(applicationState)
 ```
 
 ### Healthcare Systems
@@ -171,13 +193,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ---
 
-## 📚 Additional Resources
+## 📚 额外资源
 
-- [SLog Documentation](./slog/README.md) - Complete logging guide
-- [SDebug Documentation](./sdebug/README.md) - Debug storage guide
-- [API Documentation](https://pkg.go.dev/github.com/yicun/ibuer-go)
-- [Performance Guide](./docs/PERFORMANCE.md)
-- [Security Guide](./docs/SECURITY.md)
+- [SLog文档](./slog/README.md) - 完整日志指南
+- [SDebug文档](./sdebug/README.md) - 调试存储指南
+- [SCopy文档](./scopy/README.md) - 深拷贝指南
+- [API文档](https://pkg.go.dev/github.com/yicun/ibuer-go)
+- [性能指南](./docs/PERFORMANCE.md)
+- [安全指南](./docs/SECURITY.md)
 
 For more information, visit our [documentation](https://github.com/yicun/ibuer-go/wiki).
 
@@ -199,6 +222,7 @@ For more information, visit our [documentation](https://github.com/yicun/ibuer-g
 |---------|----------|-------------|----------|-------|
 | **SLog** | 结构化日志记录 | ~450ns/次 | 0 分配 | 企业级安全日志 |
 | **SDebug** | 调试存储 | ~89ns/次 | 0 分配 | 高频调试 |
+| **SCopy** | 深拷贝 | ~53ns/次 | 48B/次 | 高性能对象复制 |
 
 ---
 
@@ -218,6 +242,13 @@ For more information, visit our [documentation](https://github.com/yicun/ibuer-g
 - ToMap操作快**1,459倍**
 - 理想用于**交易系统**和**实时监控**
 
+### 🔄 [SCopy](./scopy) - 高性能深拷贝
+- **纳秒级**基本类型复制 (~53ns)
+- **完整类型支持**所有Go类型
+- **循环检测**防止无限循环
+- **类型缓存**重复结构体操作优化
+- 完美适用于**状态管理**和**数据处理**
+
 ---
 
 ## 🎯 快速开始
@@ -225,12 +256,14 @@ For more information, visit our [documentation](https://github.com/yicun/ibuer-g
 ```bash
 go get github.com/yicun/ibuer-go/slog
 go get github.com/yicun/ibuer-go/sdebug
+go get github.com/yicun/ibuer-go/scopy
 ```
 
 ```go
 import (
     "github.com/yicun/ibuer-go/slog"
     "github.com/yicun/ibuer-go/sdebug"
+    "github.com/yicun/ibuer-go/scopy"
 )
 
 // 高性能日志记录
@@ -241,13 +274,17 @@ logger.Info("用户创建", user)
 debug := sdebug.NewDebugInfo(true)
 debug.Set("用户", "id", 123)
 debug.Incr("指标", "请求数", 1)
+
+// 高性能深拷贝
+copier := scopy.New(nil)
+copied, err := copier.Copy(复杂对象)
 ```
 
 ---
 
 ## 🏗️ 架构
 
-两个库都使用**企业级**架构构建：
+所有库都使用**企业级**架构构建：
 
 - 常见操作**零分配路径**
 - 使用原子操作的**无锁算法**
@@ -278,11 +315,28 @@ debug.Incr("指标", "请求数", 1)
 |-----------|--------------|----------|-------------|
 | JSON 序列化 | ~3,200ns | ~450ns | **快7.1倍** |
 | 调试转映射 | ~9,251ns | ~6.3ns | **快1,459倍** |
+| 深拷贝(int) | N/A | ~53ns | **超快** |
 | 内存分配 | 1,536B | 0B | **无限减少** |
 
 ---
 
 ## 🏗️ 使用案例
+
+### 数据处理
+```go
+// 高性能状态复制
+copier := scopy.New(&scopy.Options{EnableCache: true})
+copiedState, err := copier.Copy(applicationState)
+```
+
+### 微服务
+```go
+// 分布式跟踪字段级控制
+logger.WithFields(slog.Fields{
+    "服务": "订单处理器",
+    "跟踪ID": traceID,
+}).Info("订单已处理", order)
+```
 
 ### 高频交易
 ```go
@@ -360,6 +414,7 @@ go test -v ./...
 
 - [SLog文档](./slog/README.md) - 完整日志指南
 - [SDebug文档](./sdebug/README.md) - 调试存储指南
+- [SCopy文档](./scopy/README.md) - 深拷贝指南
 - [API文档](https://pkg.go.dev/github.com/yicun/ibuer-go)
 - [性能指南](./docs/PERFORMANCE.md)
 - [安全指南](./docs/SECURITY.md)

@@ -29,5 +29,8 @@ go.work.sum
 
 # Editor/IDE
 .idea/
+.idea/*
 .vscode/
+.vscode/*
 .claude/
+.claude/*

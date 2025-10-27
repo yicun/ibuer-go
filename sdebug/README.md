@@ -33,29 +33,32 @@ applications where every nanosecond counts.
 
 ### Core Performance Metrics
 
-| Operation Type | Performance | Improvement | Memory Usage | Allocations |
-|----------------|-------------|-------------|--------------|-------------|
-| **Set** | ~373ns/op | **8.8x faster** | 0 B | 0 |
-| **Incr** | ~89ns/op | **19.6x faster** | 0 B | 0 |
-| **ToMap** | ~6.3ns/op | **1,459x faster** | 0 B | 0 |
-| **ToJSON** | ~300μs/op | **15x faster** | 0 B | 0 |
-| **Concurrent** | ~366ns/op | **9.7x faster** | 0 B | 0 |
+| Operation Type | Performance | Improvement       | Memory Usage | Allocations |
+|----------------|-------------|-------------------|--------------|-------------|
+| **Set**        | ~373ns/op   | **8.8x faster**   | 0 B          | 0           |
+| **Incr**       | ~89ns/op    | **19.6x faster**  | 0 B          | 0           |
+| **ToMap**      | ~6.3ns/op   | **1,459x faster** | 0 B          | 0           |
+| **ToJSON**     | ~300μs/op   | **15x faster**    | 0 B          | 0           |
+| **Concurrent** | ~366ns/op   | **9.7x faster**   | 0 B          | 0           |
 
 ### Scalability Characteristics
 
 #### ⚡ **Ultra-Low Latency**
+
 - **Nanosecond-level operations**: Optimized for high-frequency trading systems
 - **Zero-allocation paths**: No GC pressure under heavy load
 - **Lock-free algorithms**: Atomic operations for concurrent safety
 - **CPU cache optimized**: Minimizes cache misses
 
 #### 📈 **High Throughput**
+
 - **2.7M operations/second**: Single-core performance
 - **Linear scaling**: Up to 32 concurrent goroutines
 - **Memory efficient**: Constant memory usage regardless of load
 - **GC friendly**: <0.1% GC time under heavy load
 
 #### 🛡️ **Production Ready**
+
 - **Thread-safe**: Full concurrent safety with atomic operations
 - **Zero-configuration**: No setup overhead, works out of the box
 - **Memory bounded**: Configurable limits prevent OOM
@@ -567,44 +570,44 @@ wg.Wait()
 ```go
 // Enterprise-grade microservice monitoring
 type ServiceMetrics struct {
-    ServiceName string
-    InstanceID  string
-    Version     string
+ServiceName string
+InstanceID  string
+Version     string
 }
 
 func NewServiceMonitor(service ServiceMetrics) *sdebug.SDebugStorage {
-    debug := sdebug.NewDebugInfo(true)
+debug := sdebug.NewDebugInfo(true)
 
-    // Initialize service metadata
-    debug.Set("service", "name", service.ServiceName)
-    debug.Set("service", "instance", service.InstanceID)
-    debug.Set("service", "version", service.Version)
-    debug.Set("service", "start_time", time.Now().Unix())
+// Initialize service metadata
+debug.Set("service", "name", service.ServiceName)
+debug.Set("service", "instance", service.InstanceID)
+debug.Set("service", "version", service.Version)
+debug.Set("service", "start_time", time.Now().Unix())
 
-    return debug
+return debug
 }
 
 func (s *OrderService) ProcessOrder(orderID string) error {
-    // Track order processing metrics
-    s.debug.Set("order", orderID, map[string]interface{}{
-        "status": "processing",
-        "start_time": time.Now().Unix(),
-    })
+// Track order processing metrics
+s.debug.Set("order", orderID, map[string]interface{}{
+"status": "processing",
+"start_time": time.Now().Unix(),
+})
 
-    // Increment processing counter
-    s.debug.Incr("orders", "processing", 1)
+// Increment processing counter
+s.debug.Incr("orders", "processing", 1)
 
-    // Process order...
+// Process order...
 
-    // Update metrics on completion
-    s.debug.Set("order", orderID, map[string]interface{}{
-        "status": "completed",
-        "end_time": time.Now().Unix(),
-    })
-    s.debug.Incr("orders", "completed", 1)
-    s.debug.Incr("orders", "processing", -1) // Decrement processing
+// Update metrics on completion
+s.debug.Set("order", orderID, map[string]interface{}{
+"status": "completed",
+"end_time": time.Now().Unix(),
+})
+s.debug.Incr("orders", "completed", 1)
+s.debug.Incr("orders", "processing", -1) // Decrement processing
 
-    return nil
+return nil
 }
 ```
 
@@ -613,32 +616,32 @@ func (s *OrderService) ProcessOrder(orderID string) error {
 ```go
 // Ultra-low-latency trading metrics
 type TradingMetrics struct {
-    Symbol    string
-    Exchange  string
-    DebugInfo *sdebug.SDebugStorage
+Symbol    string
+Exchange  string
+DebugInfo *sdebug.SDebugStorage
 }
 
 func (t *TradingMetrics) OnMarketUpdate(price float64, volume int64) {
-    // Nanosecond-level metric recording
-    t.DebugInfo.Store("market", "price", price)
-    t.DebugInfo.Store("market", "volume", volume)
-    t.DebugInfo.Incr("market", "updates", 1)
+// Nanosecond-level metric recording
+t.DebugInfo.Store("market", "price", price)
+t.DebugInfo.Store("market", "volume", volume)
+t.DebugInfo.Incr("market", "updates", 1)
 
-    // Track price movements
-    currentData := t.DebugInfo.Peek()
-    if marketData, exists := currentData["market"].(map[string]interface{}); exists {
-        if highPrice, ok := marketData["high_price"].(float64); !ok || price > highPrice {
-            t.DebugInfo.Store("market", "high_price", price)
-        }
-        if lowPrice, ok := marketData["low_price"].(float64); !ok || price < lowPrice {
-            t.DebugInfo.Store("market", "low_price", price)
-        }
-    }
+// Track price movements
+currentData := t.DebugInfo.Peek()
+if marketData, exists := currentData["market"].(map[string]interface{}); exists {
+if highPrice, ok := marketData["high_price"].(float64); !ok || price > highPrice {
+t.DebugInfo.Store("market", "high_price", price)
+}
+if lowPrice, ok := marketData["low_price"].(float64); !ok || price < lowPrice {
+t.DebugInfo.Store("market", "low_price", price)
+}
+}
 }
 
 func (t *TradingMetrics) GetMetricsSnapshot() map[string]interface{} {
-    // Fast snapshot for reporting
-    return t.DebugInfo.ToMap()
+// Fast snapshot for reporting
+return t.DebugInfo.ToMap()
 }
 ```
 
@@ -647,38 +650,38 @@ func (t *TradingMetrics) GetMetricsSnapshot() map[string]interface{} {
 ```go
 // HIPAA-compliant patient data tracking
 type PatientMonitor struct {
-    PatientID string
-    DebugInfo *sdebug.SDebugStorage
+PatientID string
+DebugInfo *sdebug.SDebugStorage
 }
 
 func NewPatientMonitor(patientID string) *PatientMonitor {
-    debug := sdebug.NewDebugInfo(true)
+debug := sdebug.NewDebugInfo(true)
 
-    // Store only non-PII data
-    debug.Set("patient", "id_hash", hashPatientID(patientID)) // Hashed ID
-    debug.Set("patient", "monitoring_start", time.Now().Unix())
+// Store only non-PII data
+debug.Set("patient", "id_hash", hashPatientID(patientID)) // Hashed ID
+debug.Set("patient", "monitoring_start", time.Now().Unix())
 
-    return &PatientMonitor{
-        PatientID: patientID,
-        DebugInfo: debug,
-    }
+return &PatientMonitor{
+PatientID: patientID,
+DebugInfo: debug,
+}
 }
 
 func (p *PatientMonitor) RecordVitalSign(vitalType string, value float64) {
-    // Track vital signs without storing actual patient data
-    p.DebugInfo.Incr("vitals", vitalType+"_count", 1)
-    p.DebugInfo.Store("vitals", vitalType+"_latest", value)
+// Track vital signs without storing actual patient data
+p.DebugInfo.Incr("vitals", vitalType+"_count", 1)
+p.DebugInfo.Store("vitals", vitalType+"_latest", value)
 
-    // Track trends (min/max/average)
-    currentData := p.DebugInfo.Peek()
-    if vitalsData, exists := currentData["vitals"].(map[string]interface{}); exists {
-        if maxVal, ok := vitalsData[vitalType+"_max"].(float64); !ok || value > maxVal {
-            p.DebugInfo.Store("vitals", vitalType+"_max", value)
-        }
-        if minVal, ok := vitalsData[vitalType+"_min"].(float64); !ok || value < minVal {
-            p.DebugInfo.Store("vitals", vitalType+"_min", value)
-        }
-    }
+// Track trends (min/max/average)
+currentData := p.DebugInfo.Peek()
+if vitalsData, exists := currentData["vitals"].(map[string]interface{}); exists {
+if maxVal, ok := vitalsData[vitalType+"_max"].(float64); !ok || value > maxVal {
+p.DebugInfo.Store("vitals", vitalType+"_max", value)
+}
+if minVal, ok := vitalsData[vitalType+"_min"].(float64); !ok || value < minVal {
+p.DebugInfo.Store("vitals", vitalType+"_min", value)
+}
+}
 }
 ```
 
@@ -687,45 +690,45 @@ func (p *PatientMonitor) RecordVitalSign(vitalType string, value float64) {
 ```go
 // Real-time risk monitoring for financial services
 type RiskMonitor struct {
-    PortfolioID string
-    DebugInfo   *sdebug.SDebugStorage
+PortfolioID string
+DebugInfo   *sdebug.SDebugStorage
 }
 
 func NewRiskMonitor(portfolioID string) *RiskMonitor {
-    debug := sdebug.NewDebugInfo(true)
+debug := sdebug.NewDebugInfo(true)
 
-    debug.Set("portfolio", "id", portfolioID)
-    debug.Set("risk", "monitoring_start", time.Now().Unix())
-    debug.Store("risk", "exposure_limit", 1000000.00) // $1M limit
+debug.Set("portfolio", "id", portfolioID)
+debug.Set("risk", "monitoring_start", time.Now().Unix())
+debug.Store("risk", "exposure_limit", 1000000.00) // $1M limit
 
-    return &RiskMonitor{
-        PortfolioID: portfolioID,
-        DebugInfo:   debug,
-    }
+return &RiskMonitor{
+PortfolioID: portfolioID,
+DebugInfo:   debug,
+}
 }
 
 func (r *RiskMonitor) UpdateExposure(exposure float64) {
-    // Track real-time exposure
-    r.DebugInfo.Store("risk", "current_exposure", exposure)
-    r.DebugInfo.Incr("risk", "updates", 1)
+// Track real-time exposure
+r.DebugInfo.Store("risk", "current_exposure", exposure)
+r.DebugInfo.Incr("risk", "updates", 1)
 
-    // Calculate exposure percentage
-    currentData := r.DebugInfo.Peek()
-    if riskData, exists := currentData["risk"].(map[string]interface{}); exists {
-        if limit, ok := riskData["exposure_limit"].(float64); ok {
-            percentage := (exposure / limit) * 100
-            r.DebugInfo.Store("risk", "exposure_percentage", percentage)
+// Calculate exposure percentage
+currentData := r.DebugInfo.Peek()
+if riskData, exists := currentData["risk"].(map[string]interface{}); exists {
+if limit, ok := riskData["exposure_limit"].(float64); ok {
+percentage := (exposure / limit) * 100
+r.DebugInfo.Store("risk", "exposure_percentage", percentage)
 
-            // Alert if approaching limit
-            if percentage > 80 {
-                r.DebugInfo.Incr("risk", "high_exposure_alerts", 1)
-            }
-        }
-    }
+// Alert if approaching limit
+if percentage > 80 {
+r.DebugInfo.Incr("risk", "high_exposure_alerts", 1)
+}
+}
+}
 }
 
 func (r *RiskMonitor) GetRiskMetrics() map[string]interface{} {
-    return r.DebugInfo.ToMap()
+return r.DebugInfo.ToMap()
 }
 
 ---
@@ -826,7 +829,7 @@ For more information, visit our [documentation](https://github.com/yicun/ibuer-g
 
 ---
 
-# SDebug - 高性能Go调试存储系统
+# SDebug - 高性能调试存储系统 (GO语言版)
 
 [![Go Version](https://img.shields.io/badge/go-%3E%3D1.23-blue.svg)](https://golang.org/doc/go1.23)
 [![License](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
@@ -860,29 +863,32 @@ For more information, visit our [documentation](https://github.com/yicun/ibuer-g
 
 ### 核心性能指标
 
-| 操作类型 | 性能 | 改进 | 内存使用 | 分配次数 |
-|----------------|-------------|-------------|--------------|-------------|
-| **Set** | ~373ns/次 | **8.8倍更快** | 0 B | 0 |
-| **Incr** | ~89ns/次 | **19.6倍更快** | 0 B | 0 |
-| **ToMap** | ~6.3ns/次 | **1,459倍更快** | 0 B | 0 |
-| **ToJSON** | ~300μs/次 | **15倍更快** | 0 B | 0 |
-| **并发** | ~366ns/次 | **9.7倍更快** | 0 B | 0 |
+| 操作类型       | 性能       | 改进           | 内存使用 | 分配次数 |
+|------------|----------|--------------|------|------|
+| **Set**    | ~373ns/次 | **8.8倍更快**   | 0 B  | 0    |
+| **Incr**   | ~89ns/次  | **19.6倍更快**  | 0 B  | 0    |
+| **ToMap**  | ~6.3ns/次 | **1,459倍更快** | 0 B  | 0    |
+| **ToJSON** | ~300μs/次 | **15倍更快**    | 0 B  | 0    |
+| **并发**     | ~366ns/次 | **9.7倍更快**   | 0 B  | 0    |
 
 ### 可扩展性特征
 
 #### ⚡ **超低延迟**
+
 - **纳秒级操作**: 针对高频交易系统优化
 - **零分配路径**: 重负载下无GC压力
 - **无锁算法**: 原子操作实现并发安全
 - **CPU缓存优化**: 最小化缓存未命中
 
 #### 📈 **高吞吐量**
+
 - **270万次操作/秒**: 单核性能
 - **线性扩展**: 最多32个并发goroutine
 - **内存高效**: 无论负载如何，内存使用恒定
 - **GC友好**: 重负载下GC时间<0.1%
 
 #### 🛡️ **生产就绪**
+
 - **线程安全**: 原子操作实现完全并发安全
 - **零配置**: 无需设置开销，开箱即用
 - **内存有界**: 可配置限制防止OOM
@@ -1044,7 +1050,7 @@ SDebug现在包含一个复杂的**可选深拷贝系统**，为数据保护提�
 ```go
 // 检查深拷贝是否启用（默认：true）
 if debug.IsDeepCopyEnabled() {
-fmt.Println("深拷贝保护已激活")
+    fmt.Println("深拷贝保护已激活")
 }
 
 // 禁用深拷贝以获得最大性能
@@ -1097,9 +1103,9 @@ debug := sdebug.NewDebugInfo(true)
 
 // 创建可变数据
 userData := map[string]any{
-"姓名": "张三",
-"分数": 100,
-"元数据": map[string]any{"等级": "高级"},
+    "姓名": "张三",
+    "分数": 100,
+    "元数据": map[string]any{"等级": "高级"},
 }
 
 // 启用深拷贝存储（默认）
@@ -1112,8 +1118,8 @@ userData["元数据"].(map[string]any)["等级"] = "基础" // 外部修改
 // 验证存储数据不受外部修改影响
 stored := debug.Peek()
 if data, ok := stored["用户"].(map[string]any)["数据"].(map[string]any); ok {
-fmt.Println(data["姓名"]) // 仍然是"张三"（受保护！）
-fmt.Println(data["元数据"].(map[string]any)["等级"]) // 仍然是"高级"（受保护！）
+    fmt.Println(data["姓名"]) // 仍然是"张三"（受保护！）
+    fmt.Println(data["元数据"].(map[string]any)["等级"]) // 仍然是"高级"（受保护！）
 }
 
 // 禁用深拷贝以获得性能
@@ -1191,13 +1197,13 @@ go test -bench=. -benchmem ./sdebug
 debug := sdebug.NewDebugInfo(true)
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
-debug.Set("请求", "路径", r.URL.Path)
-debug.Incr("指标", "请求数", 1)
-
-start := time.Now()
-// 处理请求...
-
-debug.Set("请求", "耗时", time.Since(start))
+    debug.Set("请求", "路径", r.URL.Path)
+    debug.Incr("指标", "请求数", 1)
+    
+    start := time.Now()
+    // 处理请求...
+    
+    debug.Set("请求", "耗时", time.Since(start))
 }
 ```
 
@@ -1208,13 +1214,13 @@ debug.Set("请求", "耗时", time.Since(start))
 debug := sdebug.NewDebugInfo(true)
 
 func processMessage(msg Message) {
-debug.Set("消息", "ID", msg.ID)
-debug.Incr("指标", "已处理", 1)
+    debug.Set("消息", "ID", msg.ID)
+    debug.Incr("指标", "已处理", 1)
 
-if err := process(msg); err != nil {
-debug.Incr("指标", "错误数", 1)
-debug.Set("错误", "最后", err.Error())
-}
+    if err := process(msg); err != nil {
+        debug.Incr("指标", "错误数", 1)
+        debug.Set("错误", "最后", err.Error())
+    }
 }
 ```
 
@@ -1225,10 +1231,10 @@ debug.Set("错误", "最后", err.Error())
 debug := sdebug.NewDebugInfo(true)
 
 func onMarketUpdate(update MarketUpdate) {
-// 纳秒级调试记录
-debug.Store("市场", "价格", update.Price)
-debug.Incr("市场", "更新次数", 1)
-debug.Set("市场", "最后时间", update.Timestamp)
+    // 纳秒级调试记录
+    debug.Store("市场", "价格", update.Price)
+    debug.Incr("市场", "更新次数", 1)
+    debug.Set("市场", "最后时间", update.Timestamp)
 }
 ```
 
@@ -1240,12 +1246,12 @@ var wg sync.WaitGroup
 debug := sdebug.NewDebugInfo(true)
 
 for i := 0; i < 100; i++ {
-wg.Add(1)
-go func (id int) {
-defer wg.Done()
-debug.Set("协程", fmt.Sprintf("id_%d", id), id)
-debug.Incr("计数器", "总数", 1)
-}(i)
+    wg.Add(1)
+    go func (id int) {
+        defer wg.Done()
+        debug.Set("协程", fmt.Sprintf("id_%d", id), id)
+        debug.Incr("计数器", "总数", 1)
+    }(i)
 }
 wg.Wait()
 ```
@@ -1266,12 +1272,12 @@ wg.Wait()
 
 ```go
 type SDebugStorage struct {
-enabled   atomic.Bool // 调试启用/禁用标志
-deepCopy  atomic.Bool // 深拷贝启用/禁用标志
-top       sync.Map     // 线程安全键值存储
-mu        sync.RWMutex // 保护缓存操作
-cacheMap  atomic.Value // 缓存映射导出
-cacheJSON atomic.Value // 缓存JSON导出
+    enabled   atomic.Bool // 调试启用/禁用标志
+    deepCopy  atomic.Bool // 深拷贝启用/禁用标志
+    top       sync.Map     // 线程安全键值存储
+    mu        sync.RWMutex // 保护缓存操作
+    cacheMap  atomic.Value // 缓存映射导出
+    cacheJSON atomic.Value // 缓存JSON导出
 }
 ```
 
